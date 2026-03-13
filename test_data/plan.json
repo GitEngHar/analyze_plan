@@ -1,0 +1,119 @@
+{
+  "format_version": "1.2",
+  "terraform_version": "1.10.5",
+  "variables": {
+    "lambda_exec_role_arn": {
+      "value": "arn:aws:iam::111122223333:role/test-lambda-role"
+    },
+    "lambda_image_uri": {
+      "value": "111122223333.dkr.ecr.ap-northeast-1.amazonaws.com/point-service/batch:latest"
+    },
+    "line_auth_client_id": {
+      "value": "0000000000"
+    },
+    "my_global_ip": {
+      "value": "203.0.113.0/24"
+    }
+  },
+  "resource_changes": [
+    {
+      "address": "module.alb.aws_lb.ecs_alb",
+      "module_address": "module.alb",
+      "mode": "managed",
+      "type": "aws_lb",
+      "name": "ecs_alb",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {
+          "name": "test-lb",
+          "load_balancer_type": "application",
+          "internal": false
+        }
+      }
+    },
+    {
+      "address": "module.ecs.aws_ecs_service.app_service",
+      "module_address": "module.ecs",
+      "mode": "managed",
+      "type": "aws_ecs_service",
+      "name": "app_service",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["update"],
+        "before": {
+          "desired_count": 1,
+          "name": "PointService"
+        },
+        "after": {
+          "desired_count": 2,
+          "name": "PointService"
+        }
+      }
+    },
+    {
+      "address": "module.db.aws_ecs_service.db_service",
+      "module_address": "module.db",
+      "mode": "managed",
+      "type": "aws_ecs_service",
+      "name": "db_service",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["delete"],
+        "before": {
+          "name": "db-service",
+          "desired_count": 1
+        },
+        "after": null
+      }
+    },
+    {
+      "address": "module.ecs.aws_ecs_task_definition.app_task_def",
+      "module_address": "module.ecs",
+      "mode": "managed",
+      "type": "aws_ecs_task_definition",
+      "name": "app_task_def",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["delete", "create"],
+        "before": {
+          "image": "111122223333.dkr.ecr.ap-northeast-1.amazonaws.com/point-service/app:v1",
+          "cpu": "256",
+          "memory": "512"
+        },
+        "after": {
+          "image": "111122223333.dkr.ecr.ap-northeast-1.amazonaws.com/point-service/app:v2",
+          "cpu": "256",
+          "memory": "512"
+        }
+      }
+    }
+  ],
+  "prior_state": {
+    "format_version": "1.0",
+    "terraform_version": "1.10.5",
+    "values": {
+      "root_module": {
+        "resources": [
+          {
+            "address": "data.aws_caller_identity.current",
+            "mode": "data",
+            "type": "aws_caller_identity",
+            "name": "current",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "values": {
+              "account_id": "111122223333",
+              "arn": "arn:aws:iam::111122223333:user/test-user",
+              "user_id": "AIDATESTUSER123456"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "applyable": true,
+  "complete": true,
+  "errored": false,
+  "timestamp": "2026-03-14T10:00:00Z"
+}
