@@ -50,6 +50,7 @@ func main() {
 	}
 	countResult, addressResult := summarizeResource(plan)
 	outPutSummary(countResult, addressResult)
+	warnDetected(addressResult)
 }
 
 func summarizeResource(plan Plan) (ResultResourceCount, ResultResourceAddress) {
@@ -106,7 +107,7 @@ func summarizeResource(plan Plan) (ResultResourceCount, ResultResourceAddress) {
 }
 
 func outPutSummary(countResult ResultResourceCount, addressResult ResultResourceAddress) {
-	fmt.Println("\nSummary\n---")
+	fmt.Println("\nTerraform Plan Summary\n----------------------")
 	fmt.Println("create:", countResult.Create)
 	fmt.Println("update:", countResult.Update)
 	fmt.Println("delete:", countResult.Delete)
@@ -122,5 +123,18 @@ func outPutSummary(countResult ResultResourceCount, addressResult ResultResource
 	}
 	for _, address := range addressResult.Replace {
 		fmt.Println("+/- ", address)
+	}
+}
+
+func warnDetected(addresses ResultResourceAddress) {
+	const replaceWarning = "⚠ replace detected"
+	var isReplaceWarning = len(addresses.Replace) > 0
+	fmt.Println("\nWarnings\n--------")
+	// replace warn
+	if isReplaceWarning {
+		fmt.Println(replaceWarning)
+		for _, address := range addresses.Replace {
+			fmt.Println("+/- ", address)
+		}
 	}
 }
