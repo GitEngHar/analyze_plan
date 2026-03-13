@@ -19,10 +19,21 @@ type Change struct {
 	Actions []string `json:"actions"`
 }
 
+type ResultResourceCount struct {
+	Create  int
+	Delete  int
+	Update  int
+	Replace int
+}
+
+type ResultResourceAddress struct {
+	Create  []string
+	Delete  []string
+	Update  []string
+	Replace []string
+}
+
 func main() {
-	var (
-		create, update, del, replace int
-	)
 	if len(os.Args) < 2 {
 		fmt.Println("usage: go run analyze_plan.go plan.json")
 		os.Exit(1)
@@ -40,7 +51,16 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	countResult, addressResult := summarizeResource(plan)
+	outPutSummary(countResult, addressResult)
 
+}
+
+func summarizeResource(plan Plan) (ResultResourceCount, ResultResourceAddress) {
+	var (
+		createCount, updateCount, delCount, replaceCount            int
+		createAddress, updateAddress, deleteAddress, replaceAddress []string
+	)
 	for _, rc := range plan.ResourceChanges {
 		var action string
 		actions := rc.Change.Actions
@@ -60,24 +80,51 @@ func main() {
 
 		switch action {
 		case "create":
-			create++
+			createCount++
+			createAddress = append(createAddress, rc.Address)
 		case "update":
-			update++
+			updateCount++
+			updateAddress = append(updateAddress, rc.Address)
 		case "delete":
-			del++
+			delCount++
+			deleteAddress = append(deleteAddress, rc.Address)
 		case "replace":
-			replace++
+			replaceCount++
+			replaceAddress = append(replaceAddress, rc.Address)
 		}
 		if action != "no-op" {
 			fmt.Printf("%s -> %s\n", rc.Address, action)
 		}
-
 	}
+	return ResultResourceCount{
+			Create:  createCount,
+			Update:  updateCount,
+			Delete:  delCount,
+			Replace: replaceCount,
+		}, ResultResourceAddress{
+			Create:  createAddress,
+			Update:  updateAddress,
+			Delete:  deleteAddress,
+			Replace: replaceAddress,
+		}
+}
 
-	fmt.Println("\nSummary")
-	fmt.Println("create:", create)
-	fmt.Println("update:", update)
-	fmt.Println("delete:", del)
-	fmt.Println("replace:", replace)
-
+func outPutSummary(countResult ResultResourceCount, addressResult ResultResourceAddress) {
+	fmt.Println("\nSummary\n---")
+	fmt.Println("create: ", countResult.Create)
+	for _, address := range addressResult.Create {
+		fmt.Println("+ ", address)
+	}
+	fmt.Println("update: ", countResult.Update)
+	for _, address := range addressResult.Update {
+		fmt.Println("~ ", address)
+	}
+	fmt.Println("delete: ", countResult.Delete)
+	for _, address := range addressResult.Delete {
+		fmt.Println("- ", address)
+	}
+	fmt.Println("replace: ", countResult.Replace)
+	for _, address := range addressResult.Replace {
+		fmt.Println("+/- ", address)
+	}
 }
