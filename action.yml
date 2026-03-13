@@ -17,4 +17,4 @@ runs:
     - name: Run summary
       shell: bash
       run: |
-        go run ${{ github.action_path }}/analyze_plan.go plan.json
+        go run ${{ github.action_path }}/analyze_plan.go ${{ inputs.plan-path }}
