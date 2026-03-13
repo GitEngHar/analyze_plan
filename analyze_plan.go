@@ -21,7 +21,7 @@ type Change struct {
 
 func main() {
 	var (
-		create, update, del int
+		create, update, del, noop int
 	)
 	if len(os.Args) < 2 {
 		fmt.Println("usage: go run analyze_plan.go plan.json")
@@ -51,6 +51,8 @@ func main() {
 				update++
 			case "del":
 				del++
+			case "no-op":
+				noop++
 			}
 
 			fmt.Printf("%s -> %s\n", rc.Address, action)
@@ -61,4 +63,5 @@ func main() {
 	fmt.Println("create:", create)
 	fmt.Println("update:", update)
 	fmt.Println("delete:", del)
+	fmt.Println("noop:", noop)
 }
