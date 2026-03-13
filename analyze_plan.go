@@ -49,13 +49,13 @@ func main() {
 				create++
 			case "update":
 				update++
-			case "del":
+			case "delete":
 				del++
-			case "no-op":
-				noop++
+			}
+			if action != "no-op" {
+				fmt.Printf("%s -> %s\n", rc.Address, action)
 			}
 
-			fmt.Printf("%s -> %s\n", rc.Address, action)
 		}
 	}
 
