@@ -21,7 +21,7 @@ type Change struct {
 
 func main() {
 	var (
-		create, update, del, noop int
+		create, update, del, noop, replace int
 	)
 	if len(os.Args) < 2 {
 		fmt.Println("usage: go run analyze_plan.go plan.json")
@@ -42,26 +42,42 @@ func main() {
 	}
 
 	for _, rc := range plan.ResourceChanges {
-		for _, action := range rc.Change.Actions {
+		var action string
+		actions := rc.Change.Actions
 
-			switch action {
-			case "create":
-				create++
-			case "update":
-				update++
-			case "delete":
-				del++
-			}
-			if action != "no-op" {
-				fmt.Printf("%s -> %s\n", rc.Address, action)
-			}
-
+		switch {
+		case len(actions) == 1 && actions[0] == "create":
+			action = "create"
+		case len(actions) == 1 && actions[0] == "update":
+			action = "update"
+		case len(actions) == 1 && actions[0] == "delete":
+			action = "delete"
+		case len(actions) == 2 && actions[0] == "delete" && actions[1] == "create":
+			action = "replace"
+		default:
+			action = "no-op"
 		}
+
+		switch action {
+		case "create":
+			create++
+		case "update":
+			update++
+		case "delete":
+			del++
+		case "replace":
+			replace++
+		}
+		if action != "no-op" {
+			fmt.Printf("%s -> %s\n", rc.Address, action)
+		}
+
 	}
 
 	fmt.Println("\nSummary")
 	fmt.Println("create:", create)
 	fmt.Println("update:", update)
 	fmt.Println("delete:", del)
+	fmt.Println("replace:", replace)
 	fmt.Println("noop:", noop)
 }
