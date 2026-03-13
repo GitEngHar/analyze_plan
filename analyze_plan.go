@@ -108,18 +108,18 @@ func summarizeResource(plan Plan) (ResultResourceCount, ResultResourceAddress) {
 func outPutSummary(countResult ResultResourceCount, addressResult ResultResourceAddress) {
 	fmt.Println("\nSummary\n---")
 	fmt.Println("create:", countResult.Create)
+	fmt.Println("update:", countResult.Update)
+	fmt.Println("delete:", countResult.Delete)
+	fmt.Println("replace:", countResult.Replace)
 	for _, address := range addressResult.Create {
 		fmt.Println("+ ", address)
 	}
-	fmt.Println("update:", countResult.Update)
 	for _, address := range addressResult.Update {
 		fmt.Println("~ ", address)
 	}
-	fmt.Println("delete:", countResult.Delete)
 	for _, address := range addressResult.Delete {
 		fmt.Println("- ", address)
 	}
-	fmt.Println("replace:", countResult.Replace)
 	for _, address := range addressResult.Replace {
 		fmt.Println("+/- ", address)
 	}
