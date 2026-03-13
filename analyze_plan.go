@@ -38,14 +38,11 @@ func main() {
 		fmt.Println("usage: go run analyze_plan.go plan.json")
 		os.Exit(1)
 	}
-
 	file := os.Args[1]
-
 	data, err := os.ReadFile(file)
 	if err != nil {
 		panic(err)
 	}
-
 	var plan Plan
 	err = json.Unmarshal(data, &plan)
 	if err != nil {
@@ -53,7 +50,6 @@ func main() {
 	}
 	countResult, addressResult := summarizeResource(plan)
 	outPutSummary(countResult, addressResult)
-
 }
 
 func summarizeResource(plan Plan) (ResultResourceCount, ResultResourceAddress) {
@@ -111,19 +107,19 @@ func summarizeResource(plan Plan) (ResultResourceCount, ResultResourceAddress) {
 
 func outPutSummary(countResult ResultResourceCount, addressResult ResultResourceAddress) {
 	fmt.Println("\nSummary\n---")
-	fmt.Println("create: ", countResult.Create)
+	fmt.Println("create:", countResult.Create)
 	for _, address := range addressResult.Create {
 		fmt.Println("+ ", address)
 	}
-	fmt.Println("update: ", countResult.Update)
+	fmt.Println("update:", countResult.Update)
 	for _, address := range addressResult.Update {
 		fmt.Println("~ ", address)
 	}
-	fmt.Println("delete: ", countResult.Delete)
+	fmt.Println("delete:", countResult.Delete)
 	for _, address := range addressResult.Delete {
 		fmt.Println("- ", address)
 	}
-	fmt.Println("replace: ", countResult.Replace)
+	fmt.Println("replace:", countResult.Replace)
 	for _, address := range addressResult.Replace {
 		fmt.Println("+/- ", address)
 	}
