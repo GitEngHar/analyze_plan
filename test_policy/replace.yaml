@@ -1,0 +1,7 @@
+rules:
+  - resource: aws_ecs_task_definition
+    severity: warning
+  - resource: aws_rds_instance
+    severity: critical
+  - resource: aws_security_group
+    severity: critical

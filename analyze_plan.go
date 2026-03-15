@@ -3,7 +3,10 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"os"
+	"path/filepath"
+	"strings"
 )
 
 type Plan struct {
@@ -12,6 +15,8 @@ type Plan struct {
 
 type ResourceChange struct {
 	Address string `json:"address"`
+	Type    string `json:"type"`
+	Name    string `json:"name"`
 	Change  Change `json:"change"`
 }
 
@@ -26,6 +31,13 @@ type ResultResourceCount struct {
 	Replace int
 }
 
+type ResourceNames []string
+
+type ResultResourceTypeToNames struct {
+	Delete  map[string]ResourceNames
+	Replace map[string]ResourceNames
+}
+
 type ResultResourceAddress struct {
 	Create  []string
 	Delete  []string
@@ -33,13 +45,28 @@ type ResultResourceAddress struct {
 	Replace []string
 }
 
+type Rule struct {
+	Resource string `yaml:"resource"`
+	Severity string `yaml:"severity"`
+}
+
+type ResourceProtectPolicy struct {
+	ProtectRules []Rule `yaml:"rules"`
+}
+
+type ResourceProtectPolicies struct {
+	DeleteProtectPolicy  ResourceProtectPolicy
+	ReplaceProtectPolicy ResourceProtectPolicy
+}
+
 func main() {
-	if len(os.Args) < 2 {
-		fmt.Println("usage: go run analyze_plan.go plan.json")
+	if len(os.Args) < 3 {
+		fmt.Println("usage: go run analyze_plan.go plan.json policy_path")
 		os.Exit(1)
 	}
-	file := os.Args[1]
-	data, err := os.ReadFile(file)
+	planFilePath := os.Args[1]
+	policyFilePath := os.Args[2]
+	data, err := os.ReadFile(planFilePath)
 	if err != nil {
 		panic(err)
 	}
@@ -48,16 +75,24 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	countResult, addressResult := summarizeResource(plan)
+	resourcePolicy, err := loadPolicies(policyFilePath)
+	if err != nil {
+		panic(err)
+	}
+	countResult, addressResult, resourceTypeResult := summarizeResource(plan)
 	outPutSummary(countResult, addressResult)
-	warnDetected(addressResult)
+	replaceDetected(addressResult)
+	resourcePolicyViolationDetected(resourceTypeResult, resourcePolicy)
 }
 
-func summarizeResource(plan Plan) (ResultResourceCount, ResultResourceAddress) {
+func summarizeResource(plan Plan) (ResultResourceCount, ResultResourceAddress, ResultResourceTypeToNames) {
 	var (
 		createCount, updateCount, delCount, replaceCount            int
 		createAddress, updateAddress, deleteAddress, replaceAddress []string
+		deleteResourceNames, replaceResourceNames                   ResourceNames
 	)
+	deleteResourceTypeToNames := make(map[string]ResourceNames, len(plan.ResourceChanges))
+	replaceResourceTypeToName := make(map[string]ResourceNames, len(plan.ResourceChanges))
 	for _, rc := range plan.ResourceChanges {
 		var action string
 		actions := rc.Change.Actions
@@ -85,9 +120,13 @@ func summarizeResource(plan Plan) (ResultResourceCount, ResultResourceAddress) {
 		case "delete":
 			delCount++
 			deleteAddress = append(deleteAddress, rc.Address)
+			deleteResourceNames = append(deleteResourceNames, rc.Name)
+			deleteResourceTypeToNames[rc.Type] = deleteResourceNames
 		case "replace":
 			replaceCount++
 			replaceAddress = append(replaceAddress, rc.Address)
+			replaceResourceNames = append(replaceResourceNames, rc.Name)
+			replaceResourceTypeToName[rc.Type] = replaceResourceNames
 		}
 		if action != "no-op" {
 			fmt.Printf("%s -> %s\n", rc.Address, action)
@@ -103,6 +142,9 @@ func summarizeResource(plan Plan) (ResultResourceCount, ResultResourceAddress) {
 			Update:  updateAddress,
 			Delete:  deleteAddress,
 			Replace: replaceAddress,
+		}, ResultResourceTypeToNames{
+			Delete:  deleteResourceTypeToNames,
+			Replace: replaceResourceTypeToName,
 		}
 }
 
@@ -126,15 +168,97 @@ func outPutSummary(countResult ResultResourceCount, addressResult ResultResource
 	}
 }
 
-func warnDetected(addresses ResultResourceAddress) {
-	const replaceWarning = "⚠ replace detected"
+func replaceDetected(addresses ResultResourceAddress) {
 	var isReplaceWarning = len(addresses.Replace) > 0
-	fmt.Println("\nWarnings\n--------")
+	fmt.Println("\nReplace Detected\n----------------")
 	// replace warn
 	if isReplaceWarning {
-		fmt.Println(replaceWarning)
 		for _, address := range addresses.Replace {
 			fmt.Println("+/- ", address)
 		}
+	}
+}
+
+func loadPolicies(dir string) (*ResourceProtectPolicies, error) {
+	const (
+		deletePolicyYamlName  = "delete.yaml"
+		replacePolicyYamlName = "replace.yaml"
+	)
+
+	var resourceProtectPolicies ResourceProtectPolicies
+	files, err := os.ReadDir(dir)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, file := range files {
+		if file.IsDir() {
+			continue
+		}
+		path := filepath.Join(dir, file.Name())
+		switch file.Name() {
+		case deletePolicyYamlName:
+			protectPolicy, er := loadProtectPolicy(path)
+			if er != nil {
+				return nil, er
+			}
+			resourceProtectPolicies.DeleteProtectPolicy = *protectPolicy
+		case replacePolicyYamlName:
+			protectPolicy, er := loadProtectPolicy(path)
+			if er != nil {
+				return nil, er
+			}
+			resourceProtectPolicies.ReplaceProtectPolicy = *protectPolicy
+		default:
+			continue
+		}
+	}
+	return &resourceProtectPolicies, nil
+}
+
+func loadProtectPolicy(path string) (*ResourceProtectPolicy, error) {
+	data, er := os.ReadFile(path)
+	if er != nil {
+		return nil, er
+	}
+	var policy ResourceProtectPolicy
+	err := yaml.Unmarshal(data, &policy)
+	if err != nil {
+		return nil, err
+	}
+	return &policy, nil
+}
+
+func resourcePolicyViolationDetected(resourceTypeToNames ResultResourceTypeToNames, resourcePolicies *ResourceProtectPolicies) {
+	var deleteProtectRules = resourcePolicies.DeleteProtectPolicy
+	var replaceProtectRules = resourcePolicies.ReplaceProtectPolicy
+	fmt.Println("\nPolicy Violation\n----------------")
+	for _, deleteProtectRule := range deleteProtectRules.ProtectRules {
+		deleteResourceNames := resourceTypeToNames.Delete[deleteProtectRule.Resource]
+		if deleteResourceNames != nil {
+			for _, name := range deleteResourceNames {
+				outputPolicyViolation(deleteProtectRule.Severity, fmt.Sprintf("%s %s", "-", deleteProtectRule.Resource), name)
+			}
+		}
+	}
+
+	for _, replaceProtectRule := range replaceProtectRules.ProtectRules {
+		replaceResourceNames := resourceTypeToNames.Replace[replaceProtectRule.Resource]
+		if replaceResourceNames != nil {
+			for _, name := range replaceResourceNames {
+				outputPolicyViolation(replaceProtectRule.Severity, fmt.Sprintf("%s %s", "+/-", replaceProtectRule.Resource), name)
+			}
+		}
+	}
+}
+
+func outputPolicyViolation(severity string, resourceType, resourceName string) {
+	switch strings.ToLower(severity) {
+	case "critical":
+		fmt.Printf("🚨 %s.%s \n", resourceType, resourceName)
+		break
+	case "warning", "warn":
+		fmt.Printf("⚠️ %s.%s \n", resourceType, resourceName)
+		break
 	}
 }
