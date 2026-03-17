@@ -2,7 +2,7 @@
 <!-- logo><!-->
 
 <p align="center">
-    <em>Terraform plan more readability and safety with GitHub Actions</em>
+    <em>Terraform plan more comfortably and safety with GitHub Actions</em>
 </p>
 
 <hr>
