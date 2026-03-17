@@ -60,12 +60,22 @@ type ResourceProtectPolicies struct {
 }
 
 func main() {
-	if len(os.Args) < 3 {
+	var isUsePolicy bool
+	switch len(os.Args) {
+	case 2:
+		fmt.Println("start diff & replace detect")
+		fmt.Printf("planFilePath: %s \n", os.Args[1])
+		break
+	case 3:
+		fmt.Println("start diff & replace detect & protect policy")
+		fmt.Printf("planFilePath: %s \n,policyFilePath: %s\n", os.Args[1], os.Args[2])
+		isUsePolicy = true
+		break
+	default:
 		fmt.Println("usage: go run analyze_plan.go plan.json policy_path")
 		os.Exit(1)
 	}
 	planFilePath := os.Args[1]
-	policyFilePath := os.Args[2]
 	data, err := os.ReadFile(planFilePath)
 	if err != nil {
 		panic(err)
@@ -75,14 +85,17 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	resourcePolicy, err := loadPolicies(policyFilePath)
-	if err != nil {
-		panic(err)
-	}
 	countResult, addressResult, resourceTypeResult := summarizeResource(plan)
 	outPutSummary(countResult, addressResult)
 	replaceDetected(addressResult)
-	resourcePolicyViolationDetected(resourceTypeResult, resourcePolicy)
+	if isUsePolicy {
+		policyFilePath := os.Args[2]
+		resourcePolicy, er := loadPolicies(policyFilePath)
+		if er != nil {
+			panic(er)
+		}
+		resourcePolicyViolationDetected(resourceTypeResult, resourcePolicy)
+	}
 }
 
 func summarizeResource(plan Plan) (ResultResourceCount, ResultResourceAddress, ResultResourceTypeToNames) {
