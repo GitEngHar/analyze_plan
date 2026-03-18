@@ -39,18 +39,29 @@ Policy Violation
 
 <hr>
 
-## Expected
+## 🐝 Debug 
+go run start
 
+1. git clone
 ```bash
-
+git clone git@github.com:GitEngHar/analyze_plan.git 
 ```
 
-## Sample Yaml
-use analyze_plan
+2. run debug
+```bash
+go run ./analyze_plan.go ./test_data/plan.json test_policy
+```
+
+## 🚀 Quick Start
+use analyze_plan with GithubActions
 ```yaml
-GitEngHar/analyze_plan@v1.2.3
+  - name: summarize terraform plan
+    uses: GitEngHar/analyze_plan@v1.2.3
+    with:
+      plan-path: plan.json
 ```
 
+sample yaml
 ```yaml
 name: terraform
 
@@ -97,14 +108,10 @@ jobs:
           plan-path: plan.json
 ```
 
-## Features
-<!-- features desc -->
+## ⚙️ Features
 - **📃 Plan summary**: Summarizes Terraform plan changes (create, update, delete, replace)
 - **🔍 Replace detected**: Detects resource replacements
 - **🛡 Policy alert**: Alerts on risky changes based on predefined policies
-
-
-## 🛠 Usage
 
 
 ## 📜 License
