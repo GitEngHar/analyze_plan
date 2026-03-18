@@ -7,16 +7,48 @@
     <em>Terraform plan more comfortably and safety with GitHub Actions</em>
 </p>
 
+```bash
+start diff & replace detect & protect policy
+planFilePath: ./test_data/plan.json 
+,policyFilePath: test_policy
+module.alb.aws_lb.ecs_alb -> create
+module.ecs.aws_ecs_service.app_service -> update
+module.db.aws_ecs_service.db_service -> delete
+module.ecs.aws_ecs_task_definition.app_task_def -> replace
+
+Terraform Plan Summary
+----------------------
+create: 1
+update: 1
+delete: 1
+replace: 1
++  module.alb.aws_lb.ecs_alb
+~  module.ecs.aws_ecs_service.app_service
+-  module.db.aws_ecs_service.db_service
++/-  module.ecs.aws_ecs_task_definition.app_task_def
+
+Replace Detected
+----------------
++/-  module.ecs.aws_ecs_task_definition.app_task_def
+
+Policy Violation
+----------------
+🚨 - aws_ecs_service.db_service 
+⚠️ +/- aws_ecs_task_definition.app_task_def 
+```
+
 <hr>
 
-<!-- explain><!-->
+## Expected
 
-<!-- invite to oss><!-->
+```bash
+
+```
 
 ## Sample Yaml
 use analyze_plan
 ```yaml
-GitEngHar/analyze_plan@v1.2.1
+GitEngHar/analyze_plan@v1.2.3
 ```
 
 ```yaml
@@ -66,11 +98,10 @@ jobs:
 ```
 
 ## Features
-<!-- features desc><!-->
-- **Plan summary**
-- **Replace detected**
-- **Policy alert**
-
+<!-- features desc -->
+- **📃 Plan summary**: Summarizes Terraform plan changes (create, update, delete, replace)
+- **🔍 Replace detected**: Detects resource replacements
+- **🛡 Policy alert**: Alerts on risky changes based on predefined policies
 
 
 ## 🛠 Usage
