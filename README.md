@@ -1,5 +1,7 @@
 
-![logo](analyze_plan.png)
+<p align="center">
+  <img src="analyze_plan.png" width="300">
+</p>
 
 <p align="center">
     <em>Terraform plan more comfortably and safety with GitHub Actions</em>
