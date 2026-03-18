@@ -1,5 +1,5 @@
 
-<!-- logo><!-->
+![logo](analyze_plan.png)
 
 <p align="center">
     <em>Terraform plan more comfortably and safety with GitHub Actions</em>
