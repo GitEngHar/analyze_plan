@@ -1,6 +1,6 @@
 
 <p align="center">
-  <img src="analyze_plan.png" width="300">
+  <img src="analyze_plan.png" width="800">
 </p>
 
 <p align="center">
