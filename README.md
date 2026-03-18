@@ -1,16 +1,39 @@
+# analyze_plan
 
 <p align="center">
   <img src="analyze_plan.png" width="600">
 </p>
 
 <p align="center">
-    <em>Terraform plan more comfortably and safety with GitHub Actions</em>
+  <b>🚨 Detect risky Terraform changes before they break production</b><br>
+  <em>Analyze Terraform plans with risk detection, policy guard, and GitHub Actions integration</em>
 </p>
 
+---
+
+## ❗ Why
+
+Terraform plans are hard to review.
+
+- Did you miss a destructive change?
+- Will this replacement cause downtime?
+- Is it really safe to merge?
+
+👉 One mistake can cause serious production issues.
+
+**analyze_plan helps you detect risks instantly.**
+
+---
+
+## 🆚 Before vs After
+
+### ❌ Terraform plan
+- Hard to read
+- Risk is unclear
+- Easy to miss critical changes
+
+### ✨ Example Output
 ```bash
-start diff & replace detect & protect policy
-planFilePath: ./test_data/plan.json 
-,policyFilePath: test_policy
 module.alb.aws_lb.ecs_alb -> create
 module.ecs.aws_ecs_service.app_service -> update
 module.db.aws_ecs_service.db_service -> delete
@@ -37,31 +60,24 @@ Policy Violation
 ⚠️ +/- aws_ecs_task_definition.app_task_def 
 ```
 
-<hr>
-
-## 🐝 Debug 
-go run start
-
-1. git clone
+### 🚀Quick Start
 ```bash
-git clone git@github.com:GitEngHar/analyze_plan.git 
+$ git clone git@github.com:GitEngHar/analyze_plan.git
+$ cd analyze_plan
+
+$ go run ./analyze_plan.go ./test_data/plan.json test_policy
 ```
 
-2. run debug
+### ⚡ GitHub Actions
+Automatically analyze Terraform plans in PRs and detect risky changes before merge.
 ```bash
-go run ./analyze_plan.go ./test_data/plan.json test_policy
+- name: summarize terraform plan
+  uses: GitEngHar/analyze_plan@v1.2.3
+  with:
+    plan-path: plan.json
 ```
 
-## 🚀 Quick Start
-use analyze_plan with GithubActions
-```yaml
-  - name: summarize terraform plan
-    uses: GitEngHar/analyze_plan@v1.2.3
-    with:
-      plan-path: plan.json
-```
-
-sample yaml
+#### 📦 Full Example
 ```yaml
 name: terraform
 
@@ -74,7 +90,6 @@ on:
         type: choice
         options:
           - plan
-
 
 permissions:
   id-token: write
@@ -96,26 +111,36 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::YOUR_AWS_ACCOUNT_ID:role/YOUR_ROLE_NAME
           aws-region: ap-northeast-1
+
       - name: Terraform Plan
         if: github.event.inputs.command == 'plan'
         run: | 
           terraform init
           terraform plan -out tfplan
           terraform show -json tfplan > plan.json
-      - name: summarize terraform plan
+
+      - name: analyze terraform plan
         uses: GitEngHar/analyze_plan@v1.2.3
         with:
           plan-path: plan.json
 ```
 
-## ⚙️ Features
-- **📃 Plan summary**: Summarizes Terraform plan changes (create, update, delete, replace)
-- **🔍 Replace detected**: Detects resource replacements
-- **🛡 Policy alert**: Alerts on risky changes based on predefined policies
+### ⚙️ Features
+- 📃 Plan summary 
+  - Summarizes create / update / delete / replace
+- 🔍 Replace detection 
+  - Detects resources that will be replaced
+- 🛡 Policy guard 
+  - Detects risky changes (delete / replace) based on custom rules
 
 
-## 📜 License
-This project is distributed under the **MIT** license.
+### 🧩 Use Cases
+- Prevent destructive infrastructure changes
+- Enforce infrastructure policies
+- Improve SRE / DevOps workflows
 
+### ⭐ Support
+If this project helps you, please ⭐️ the repo!
 
-
+### 📜 License
+MIT License
