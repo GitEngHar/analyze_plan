@@ -5,5 +5,5 @@ import (
 )
 
 type PolicyRepository interface {
-	ReadPolicy() (dPolicy.ResourceProtectPolicies, error)
+	ReadPolicies(dirPath string) (*dPolicy.ResourceProtectPolicies, error)
 }
