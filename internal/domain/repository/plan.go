@@ -2,6 +2,6 @@ package repository
 
 import dPlan "terraform-sammary/internal/domain/value-object/plan"
 
-type PlanJSONRepository interface {
+type PlanRepository interface {
 	ReadPlan() (dPlan.Plan, error)
 }

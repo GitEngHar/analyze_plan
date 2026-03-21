@@ -13,7 +13,7 @@ type PlanJSONRepositoryImpl struct {
 	mu       sync.Mutex
 }
 
-func NewPlanJSONRepository(filePath string) repository.PlanJSONRepository {
+func NewPlanJSONRepository(filePath string) repository.PlanRepository {
 	return &PlanJSONRepositoryImpl{
 		filePath: filePath,
 	}
