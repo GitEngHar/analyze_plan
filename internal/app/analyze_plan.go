@@ -6,8 +6,6 @@ import (
 	"terraform-sammary/internal/handler"
 )
 
-var isUsePolicy bool
-
 func main() {
 	h := handler.NewActionsHandler()
 	err := h.Handle(os.Args)
