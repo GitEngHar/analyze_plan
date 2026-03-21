@@ -15,7 +15,7 @@ import (
 var isUsePolicy bool
 
 func NewActionsHandler() ActionsHandler {
-
+	return ActionsHandler{}
 }
 
 type ActionsHandler struct {
