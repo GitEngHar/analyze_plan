@@ -5,7 +5,9 @@ inputs:
   plan-path:
     description: path to analyze terraform plan json
     required: true
-
+  policy-path:
+    description: path to protect policy plan yaml
+    required: false
 runs:
   using: composite
   steps:
@@ -17,4 +19,4 @@ runs:
     - name: Run summary
       shell: bash
       run: |
-        go run ${{ github.action_path }}/analyze_plan.go ${{ inputs.plan-path }}
+        go run ${{ github.action_path }}/app/analyze_plan.go ${{ inputs.plan-path }} ${{ inputs.policy-path }}
