@@ -15,19 +15,19 @@ const (
 )
 
 type PolicyYAMLRepositoryImpl struct {
-	filePath string
-	mu       sync.Mutex
+	dirPath string
+	mu      sync.Mutex
 }
 
-func NewPolicyYAMLRepository(filePath string) repository.PolicyRepository {
+func NewPolicyYAMLRepository(dirPath string) repository.PolicyRepository {
 	return &PolicyYAMLRepositoryImpl{
-		filePath: filePath,
+		dirPath: dirPath,
 	}
 }
 
-func (y *PolicyYAMLRepositoryImpl) ReadPolicies(dirPath string) (*dPolicy.ResourceProtectPolicies, error) {
+func (y *PolicyYAMLRepositoryImpl) ReadPolicies() (*dPolicy.ResourceProtectPolicies, error) {
 	var policies dPolicy.ResourceProtectPolicies
-	files, err := os.ReadDir(dirPath)
+	files, err := os.ReadDir(y.dirPath)
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +36,7 @@ func (y *PolicyYAMLRepositoryImpl) ReadPolicies(dirPath string) (*dPolicy.Resour
 		if file.IsDir() {
 			continue
 		}
-		path := filepath.Join(dirPath, file.Name())
+		path := filepath.Join(y.dirPath, file.Name())
 		switch file.Name() {
 		case deletePolicyYamlName:
 			protectPolicy, er := loadProtectPolicy(path)
