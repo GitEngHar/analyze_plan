@@ -10,7 +10,7 @@ import (
 )
 
 type DetectViolation interface {
-	Execute(ctx context.Context, resourceTypeToNames summary.ResultResourceTypeToNames, dirPath string) error
+	Execute(ctx context.Context, resourceTypeToNames summary.ResultResourceTypeToNames) error
 }
 
 type DetectViolationImpl struct {
@@ -23,13 +23,14 @@ func NewDetectViolation(repo repository.PolicyRepository) DetectViolation {
 	}
 }
 
-func (v *DetectViolationImpl) Execute(ctx context.Context, resourceTypeToNames summary.ResultResourceTypeToNames, dirPath string) error {
+func (v *DetectViolationImpl) Execute(ctx context.Context, resourceTypeToNames summary.ResultResourceTypeToNames) error {
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
-	policies, err := v.repo.ReadPolicies(dirPath)
+	policies, err := v.repo.ReadPolicies()
 	if err != nil {
 		return err
 	}
+	fmt.Println("\nPolicy Violation\n----------------")
 	for _, deleteProtectRule := range policies.DeleteProtectPolicy.ProtectRules {
 		deleteResourceNames := resourceTypeToNames.Delete[deleteProtectRule.Resource]
 		if deleteResourceNames != nil {

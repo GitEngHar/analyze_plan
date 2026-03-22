@@ -31,16 +31,18 @@ func (h ActionsHandler) Handle(args []string) error {
 		fmt.Printf("planFilePath: %s \n", os.Args[1])
 		break
 	case 3:
-		fmt.Printf("planFilePath: %s \n, policyFilePath: %s\n", os.Args[1], os.Args[2])
+		policyDirPath = os.Args[2]
+		fmt.Printf("planFilePath: %s \npolicyFilePath: %s\n", os.Args[1], os.Args[2])
 		isUsePolicy = true
 		break
 	default:
 		return fmt.Errorf("usage: go run analyze_plan.go plan.json policy_path")
 	}
+	planFilePath = os.Args[1]
 	ctx := context.Background()
 	planRepo := json.NewPlanJSONRepository(planFilePath)
 	summaryUc := summary.NewConfirm(planRepo)
-	err, resultResourceAddress := summaryUc.Execute(ctx, planFilePath)
+	err, resultResourceAddress, resourceTypeToNames := summaryUc.Execute(ctx)
 	if err != nil {
 		return err
 	}
@@ -52,7 +54,7 @@ func (h ActionsHandler) Handle(args []string) error {
 	if isUsePolicy {
 		policyRepo := yaml.NewPolicyYAMLRepository(policyDirPath)
 		detectViolationUc := protect_policy.NewDetectViolation(policyRepo)
-		err = detectViolationUc.Execute(ctx, policyDirPath)
+		err = detectViolationUc.Execute(ctx, *resourceTypeToNames)
 		if err != nil {
 			return err
 		}
